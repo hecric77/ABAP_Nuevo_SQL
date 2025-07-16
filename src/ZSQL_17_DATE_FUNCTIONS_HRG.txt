@@ -1,0 +1,33 @@
+*&---------------------------------------------------------------------*
+*& Report zsql_17_date_functions_hrg
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zsql_17_date_functions_hrg.
+
+DELETE FROM demo_expressions.
+INSERT demo_expressions FROM @( VALUE #( id = 'L'
+                                         dats1 = '20270101'
+                                         dats2 = '20280101' ) ).
+
+*
+* dats_is_valid( dats1 ) AS valid,                      Valida si la fecha es valida y regresa 1 si lo es
+* dats_days_between( dats1, dats2 ) AS days_between,    Regresa los dias entre las dos fechas
+* dats_add_days( dats1, 30 ) AS add_days,               Agrega los dias indicados a la fecha, para quitar dias a la fecha se pasa un valor negativo
+* dats_add_months( dats1, -2 ) AS add_moths             Agrega meses a la fecha indicada, para quitar meses se le pasa un valor negativo
+*
+
+SELECT SINGLE FROM demo_expressions
+       FIELDS id,
+              dats1,
+              dats2,
+              dats_is_valid( dats1 ) AS valid,
+              dats_days_between( dats1, dats2 ) AS days_between,
+              dats_add_days( dats1, 30 ) AS add_days,
+              dats_add_months( dats1, -2 ) AS add_moths
+       WHERE id EQ 'L'
+       INTO @DATA(gs_result).
+
+IF sy-subrc EQ 0.
+  cl_demo_output=>display( gs_result ).
+ENDIF.

@@ -1,0 +1,15 @@
+*&---------------------------------------------------------------------*
+*& Report zsql_11_cds_hints_hrg
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zsql_11_cds_hints_hrg.
+
+SELECT FROM scustom
+       FIELDS *
+       %_HINTS HDB 'INDEX_SEARCH'
+       INTO TABLE @DATA(gt_customers).
+
+IF sy-subrc EQ 0.
+  cl_demo_output=>display( gt_customers ).
+ENDIF.

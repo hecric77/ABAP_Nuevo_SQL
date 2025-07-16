@@ -1,0 +1,16 @@
+*&---------------------------------------------------------------------*
+*& Report zsql_19_time_zone_hrg
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zsql_19_time_zone_hrg.
+
+SELECT SINGLE FROM demo_expressions
+       FIELDS abap_system_timezone( client   = @sy-mandt,
+                                    on_error = @sql_abap_system_timezone=>set_to_null ) AS system_tz,
+              abap_user_timezone( user     = @sy-uname,
+                                  client   = @sy-mandt,
+                                  on_error = @sql_abap_user_timezone=>set_to_null ) AS user_tz
+       INTO @DATA(gs_result).
+
+cl_demo_output=>display( gs_result ).

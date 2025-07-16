@@ -1,0 +1,27 @@
+*&---------------------------------------------------------------------*
+*& Report zsql_with_t100826
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zsql_with_t100826.
+
+WITH +tabla_temporal AS (
+    SELECT FROM scarr
+    FIELDS carrname, CAST( '-' AS CHAR( 4 ) ) AS connid,
+    '-' AS cityfrom, '-' AS cityto
+    WHERE carrid = 'LH'
+    UNION
+    SELECT FROM spfli
+    FIELDS '-' AS carrname, CAST( connid AS CHAR( 4 ) ) AS
+    connid,
+    cityfrom, cityto
+    WHERE carrid = 'LH' )
+
+    SELECT FROM +tabla_temporal
+    FIELDS *
+    ORDER BY carrname DESCENDING
+    INTO TABLE @DATA(gt_resultados).
+
+IF gt_resultados IS NOT INITIAL.
+  cl_demo_output=>display( gt_resultados ).
+ENDIF.

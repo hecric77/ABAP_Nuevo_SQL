@@ -1,0 +1,24 @@
+*&---------------------------------------------------------------------*
+*& Report zsql_13_temporary_table_hrg
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zsql_13_temporary_table_hrg.
+
+" La tabla zemployees debe estar definida como @AbapCatalog.tableCategory : #GLOBAL_TEMPORARY para que sea una tabla temporal
+" la cual se debe borrar antes de que termine la LUW (logical unit work) que puede ser cuando el programa termina o cuando hay un commit work,
+" si no se borra antes de eso el programa dará un DUMP
+INSERT zemployees FROM TABLE @( VALUE #( ( employee_id = 123
+                                           name = 'Héctor'
+                                           last_name = 'Rico'
+                                           gender = 'M' ) ) ).
+
+SELECT FROM zemployees
+       FIELDS *
+       INTO TABLE @DATA(gt_employees).
+
+DELETE FROM zemployees. " Aquí borramos la tabla temporal antes d finalizar la LUW para que no de un DUMP!
+
+IF sy-subrc EQ 0.
+  cl_demo_output=>display( gt_employees ).
+ENDIF.

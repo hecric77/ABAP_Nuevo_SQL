@@ -1,0 +1,20 @@
+*&---------------------------------------------------------------------*
+*& Report zsql_01_dec_inline_hrg
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zsql_01_dec_inline_hrg.
+
+SELECT * FROM sflight
+    INTO TABLE @DATA(gt_fligths)
+    UP TO 5 ROWS.
+IF sy-subrc EQ 0.
+  cl_demo_output=>display( gt_fligths ).
+ENDIF.
+
+SELECT carrid, connid FROM sflight
+    INTO TABLE @DATA(gt_flights2)
+    UP TO 7 ROWS.
+IF sy-subrc EQ 0.
+  cl_demo_output=>display( gt_flights2 ).
+ENDIF.

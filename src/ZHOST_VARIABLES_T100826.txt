@@ -1,0 +1,42 @@
+*&---------------------------------------------------------------------*
+*& Report zhost_variables_t100826
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zhost_variables_t100826.
+
+CONSTANTS: gc_carrid TYPE s_carr_id VALUE 'AA'.
+
+DATA: BEGIN OF gs_resultado,
+        carrid TYPE sflight-carrid,
+        connid TYPE sflight-connid,
+      END OF gs_resultado.
+
+DATA go_referencia LIKE REF TO gs_resultado.
+
+go_referencia = NEW #( ).
+
+SELECT SINGLE FROM sflight
+FIELDS carrid, connid
+WHERE carrid EQ @gc_carrid
+INTO CORRESPONDING FIELDS OF @gs_resultado.
+
+ASSIGN gs_resultado TO FIELD-SYMBOL(<fs_resultado>).
+
+SELECT SINGLE FROM sflight
+FIELDS carrid, connid
+WHERE carrid EQ @gc_carrid
+INTO CORRESPONDING FIELDS OF @<fs_resultado>.
+
+SELECT SINGLE FROM sflight
+FIELDS carrid, connid
+WHERE carrid EQ @gc_carrid
+INTO CORRESPONDING FIELDS OF @go_referencia->*.
+
+cl_demo_output=>new(
+ )->next_section( title = 'Variable Host de tipo estructura'
+ )->write( gs_resultado
+ )->next_section( title = 'Variable Host de tipo Field Symbol'
+ )->write( <fs_resultado>
+ )->next_section( title = 'Referencia a variable Host'
+ )->write( go_referencia->* )->display(  ).

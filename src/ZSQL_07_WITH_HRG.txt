@@ -1,0 +1,28 @@
+*&---------------------------------------------------------------------*
+*& Report zsql_07_with_hrg
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zsql_07_with_hrg.
+
+WITH +tmp_table as (
+        select from scarr
+        FIELDS carrname,
+               cast( '-' as char( 4 ) ) as connid,
+               '-' as cityfrom,
+               '-' as cityto
+        WHERE carrid EQ 'LH'
+        UNION
+        SELECT from spfli
+        fields '-' as carrname,
+               cast( connid as char( 4 ) ) as connid,
+               cityfrom,
+               cityto
+        WHERE carrid EQ 'LH' )
+
+     select from +tmp_table
+            fields *
+            ORDER BY carrname DESCENDING
+            INTO TABLE @data(gt_results).
+
+     cl_demo_output=>display( gt_results ).

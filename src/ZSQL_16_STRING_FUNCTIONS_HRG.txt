@@ -1,0 +1,49 @@
+*&---------------------------------------------------------------------*
+*& Report zsql_16_string_functions_hrg
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zsql_16_string_functions_hrg.
+
+DATA gv_char TYPE c LENGTH 6 VALUE 'LOGALI'.
+
+DELETE FROM demo_expressions.
+INSERT demo_expressions FROM @( VALUE #( id = 'L'
+                                         char1 = 'AABbCDDe'
+                                         char2 = '123456' ) ).
+*
+* left( char1, 2 ) AS left,                 Toma los caracteres que se indican empezando del lado izquierdo
+* right( char1, 3 ) AS right,               Toma los caracteres que se indican empezando del lado derecho
+* lpad( char2, 18, '0' ) AS lpad,           El segundo parametro indica el tamaño y rellena con el caracter que se indica al final los espacios faltantes iniciando por la izquierda
+* rpad( char2, 18, '0' ) AS rpad,           El segundo parametro indica el tamaño y rellena con el caracter que se indica al final los espacios faltantes iniciando por la derecha
+* ltrim( char1, 'A' ) AS ltrim,             Quita del lado izquierdo los caracteres indicados
+* rtrim( char1, 'e' ) AS rtrim,             Quita del lado derecho los caracteres indicados
+* instr( char1, 'bC' ) AS instr,            Busca en la primer cadena la segunda cadena y regresa la posicion en la que se encontró
+* length( char1 ) AS length,                Regresa la longitud de la cadena
+* replace( char1, 'DD', '__' ) AS replace,  Remplaza en la primer cadena la cadena indicada en la segunda cadena por la tercer cadena que se indica.
+* substring( char1, 3, 2 ) AS substring,    Obtiene una subcadena de la primer cadena empezando en el caracter que se indica en el segundo parametro y obteniendo el numero de caracteres que se indican en el tercer parametro
+* lower( char1 ) AS lower,                  Transforma la cadena a minusculas
+* upper( char1 ) AS upper                   Transforma la cadena a mayusculas
+*
+SELECT SINGLE FROM demo_expressions
+       FIELDS id,
+              char1,
+              char2,
+              left( char1, 2 ) AS left,
+              right( char1, 3 ) AS right,
+              lpad( char2, 18, '0' ) AS lpad,
+              rpad( char2, 18, '0' ) AS rpad,
+              ltrim( char1, 'A' ) AS ltrim,
+              rtrim( char1, 'e' ) AS rtrim,
+              instr( char1, 'bC' ) AS instr,
+              length( char1 ) AS length,
+              replace( char1, 'DD', '__' ) AS replace,
+              substring( char1, 3, 2 ) AS substring,
+              lower( char1 ) AS lower,
+              upper( char1 ) AS upper
+       WHERE id EQ 'L'
+       INTO @DATA(gs_result).
+
+IF sy-subrc EQ 0.
+  cl_demo_output=>display( gs_result ).
+ENDIF.

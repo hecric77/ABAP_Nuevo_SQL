@@ -1,0 +1,206 @@
+REPORT ZZM_DOWN .
+*table decleration
+TABLES : TADIR.
+*data decleration
+TYPES: CODELINE(255).
+DATA: SOURCECODE TYPE STANDARD TABLE OF CODELINE WITH HEADER LINE.
+DATA: PROG(60) ,
+      CODEFILE  LIKE RLGRAP-FILENAME,
+      FILENAME  TYPE STRING,
+      FUNC_TAB    TYPE TABLE OF RS38L_INCL WITH HEADER LINE,
+      PNAME       TYPE PNAME,
+      POOLNAME    TYPE TLIBG-AREA,
+      FMCOUNT(3)  TYPE N ,
+      PRGCOUNT(3) TYPE N,
+      MSG1(45).
+*Internal table for prgram info
+DATA: BEGIN OF PGMINFO OCCURS 0,
+  PGMID TYPE TADIR-PGMID,
+  OBJECT TYPE TADIR-OBJECT,
+  OBJ_NAME TYPE TADIR-OBJ_NAME,
+  DEVCLASS TYPE TADIR-DEVCLASS,
+END OF PGMINFO.
+*____________________________________________________________________
+*Get Development class from User
+PARAMETERS: PCKG TYPE TADIR-DEVCLASS.
+*____________________________________________________________________
+*Initialize variables
+FMCOUNT  = '000'.
+PRGCOUNT = '000'.
+*____________________________________________________________________
+*Proceed one by one
+PERFORM CLEARDATA.
+PERFORM WRITE_PRGRMS.
+PERFORM CLEARDATA.
+PERFORM WRITE_FMS.
+CONCATENATE PRGCOUNT ' Prgs Files & '
+            FMCOUNT ' FM Files Written' INTO MSG1.
+MESSAGE S001(00) WITH MSG1.
+*____________________________________________________________________
+*&------------------------------------------------------------------*
+*&      Form  cleardata
+*&------------------------------------------------------------------*
+*       text
+*-------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*-------------------------------------------------------------------*
+FORM CLEARDATA.
+  CLEAR: SOURCECODE,
+         PGMINFO[],
+         PROG,
+         CODEFILE,
+         FILENAME,
+         FUNC_TAB[],
+         PNAME,
+         POOLNAME.
+ENDFORM.                    " cleardata
+*&------------------------------------------------------------------*
+*&      Form  write_prgrms
+*&------------------------------------------------------------------*
+*       text
+*-------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*-------------------------------------------------------------------*
+FORM WRITE_PRGRMS.
+  DATA: PRGMSG(45).
+*select statement.
+  SELECT PGMID OBJECT OBJ_NAME DEVCLASS FROM TADIR INTO TABLE PGMINFO
+  WHERE PGMID = 'R3TR' AND
+  OBJECT      = 'PROG' AND
+  DEVCLASS    = PCKG.
+  LOOP AT PGMINFO.
+    PROG = PGMINFO-OBJ_NAME.
+    READ REPORT PROG INTO SOURCECODE.
+    CONCATENATE 'C:\ABAP\'
+    PCKG
+    'Reports\'
+    PROG
+    '.txt'
+    INTO CODEFILE.
+    FILENAME = CODEFILE.
+*function module for download files into local system
+    CALL FUNCTION 'GUI_DOWNLOAD'
+      EXPORTING
+        FILENAME                = FILENAME
+      TABLES
+        DATA_TAB                = SOURCECODE
+      EXCEPTIONS
+        FILE_WRITE_ERROR        = 1
+        NO_BATCH                = 2
+        GUI_REFUSE_FILETRANSFER = 3
+        INVALID_TYPE            = 4
+        NO_AUTHORITY            = 5
+        UNKNOWN_ERROR           = 6
+        HEADER_NOT_ALLOWED      = 7
+        SEPARATOR_NOT_ALLOWED   = 8
+        FILESIZE_NOT_ALLOWED    = 9
+        HEADER_TOO_LONG         = 10
+        DP_ERROR_CREATE         = 11
+        DP_ERROR_SEND           = 12
+        DP_ERROR_WRITE          = 13
+        UNKNOWN_DP_ERROR        = 14
+        ACCESS_DENIED           = 15
+        DP_OUT_OF_MEMORY        = 16
+        DISK_FULL               = 17
+        DP_TIMEOUT              = 18
+        FILE_NOT_FOUND          = 19
+        DATAPROVIDER_EXCEPTION  = 20
+        CONTROL_FLUSH_ERROR     = 21
+        OTHERS                  = 22.
+    IF SY-SUBRC <> 0.
+*    MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO
+*    WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.
+    ELSE.
+      PRGCOUNT = PRGCOUNT + 1.
+    ENDIF.
+    CLEAR PROG.
+    CLEAR: SOURCECODE[] , SOURCECODE , FUNC_TAB.
+  ENDLOOP.
+  CONCATENATE PRGCOUNT ' Prgs Files Written' INTO PRGMSG..
+  MESSAGE S001(00) WITH PRGMSG.
+ENDFORM.                    " write_prgrms
+*____________________________________________________________________
+*&------------------------------------------------------------------*
+*&      Form  write_fms
+*&------------------------------------------------------------------*
+*       text
+*-------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*-------------------------------------------------------------------*
+FORM WRITE_FMS.
+  DATA: FMMSG(45).
+*select statement to get all function groups.
+  SELECT PGMID OBJECT OBJ_NAME DEVCLASS FROM TADIR INTO TABLE PGMINFO
+  WHERE PGMID = 'R3TR' AND
+  OBJECT = 'FUGR' AND
+  DEVCLASS = PCKG.
+  LOOP AT PGMINFO.
+    POOLNAME = PGMINFO-OBJ_NAME.
+    CALL FUNCTION 'RS_FUNCTION_POOL_CONTENTS'
+      EXPORTING
+        FUNCTION_POOL                 = POOLNAME
+      TABLES
+        FUNCTAB                       = FUNC_TAB
+*   EXCEPTIONS
+*     FUNCTION_POOL_NOT_FOUND       = 1
+*     OTHERS                        = 2
+              .
+    IF SY-SUBRC <> 0.
+* MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO
+*         WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.
+    ENDIF.
+    LOOP AT FUNC_TAB .
+      PROG = FUNC_TAB-INCLUDE.
+      READ REPORT PROG INTO SOURCECODE.
+      CONCATENATE 'C:\ABAP\'
+      PCKG
+      'FM\'
+      FUNC_TAB-FUNCNAME
+      '.txt'
+      INTO CODEFILE.
+      FILENAME = CODEFILE.
+*function module for download files into local system
+      CALL FUNCTION 'GUI_DOWNLOAD'
+        EXPORTING
+          FILENAME                = FILENAME
+        TABLES
+          DATA_TAB                = SOURCECODE
+        EXCEPTIONS
+          FILE_WRITE_ERROR        = 1
+          NO_BATCH                = 2
+          GUI_REFUSE_FILETRANSFER = 3
+          INVALID_TYPE            = 4
+          NO_AUTHORITY            = 5
+          UNKNOWN_ERROR           = 6
+          HEADER_NOT_ALLOWED      = 7
+          SEPARATOR_NOT_ALLOWED   = 8
+          FILESIZE_NOT_ALLOWED    = 9
+          HEADER_TOO_LONG         = 10
+          DP_ERROR_CREATE         = 11
+          DP_ERROR_SEND           = 12
+          DP_ERROR_WRITE          = 13
+          UNKNOWN_DP_ERROR        = 14
+          ACCESS_DENIED           = 15
+          DP_OUT_OF_MEMORY        = 16
+          DISK_FULL               = 17
+          DP_TIMEOUT              = 18
+          FILE_NOT_FOUND          = 19
+          DATAPROVIDER_EXCEPTION  = 20
+          CONTROL_FLUSH_ERROR     = 21
+          OTHERS                  = 22.
+      IF SY-SUBRC <> 0.
+*    MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO
+*    WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.
+      ELSE.
+        FMCOUNT =  FMCOUNT + 1.
+      ENDIF.
+      CLEAR PROG.
+      CLEAR: SOURCECODE[] , SOURCECODE , FUNC_TAB.
+    ENDLOOP.
+  ENDLOOP.
+  CONCATENATE FMCOUNT ' FM Files Written' INTO FMMSG..
+  MESSAGE S001(00) WITH FMMSG.
+ENDFORM.                    " write_fms
